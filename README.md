@@ -9,7 +9,7 @@ Full list of the sites: https://chanoj.github.io/
 
 ## Dating
 
-The pages `hardware.htm`, `software.htm` and the HotDIR page carry "Updated: 29 Jan 97"; the downloads on the site are dated 1996-12 (HotDIR 3.0 beta), 1996-11-16 (AVPLite virus base) and 1996-09 (GoldWave 3.22). The site started in 1996 (HotDIR 2.14 is from 1996-08), but the state archived here is from January 1997, hence `Chandra97`. The files on the NAS are all dated 2014-06 (copy date).
+The pages `hardware.htm`, `software.htm` and the HotDIR page carry "Updated: 29 Jan 97"; the downloads on the site are dated 1996-12 (HotDIR 3.0 beta), 1996-11-16 (AVPLite virus base) and 1996-09 (GoldWave 3.22). The site started in 1996 (HotDIR 2.14 is from 1996-08), but the state archived here is from January 1997, hence `Chandra97` (the hub card says 1996, the year the site started). The files on the NAS are all dated 2014-06 (copy date).
 
 ## What was merged
 
@@ -27,6 +27,15 @@ It runs `scripts/build.py` (crawl from `index.html`: only what a page reaches is
 
 Third-party downloads (zip, rar, the two RAR installers, the module and MIDI files) are copied untouched; the pages that link them, or that show an e-mail local part or a family name, end with "To be removed from this page, contact me."
 
+## What was changed from the original
+
+- The `<frameset>` is replaced by a centred 800 px column of two iframes (`title`, `main`), to look like the screens of the time; `frame-restore.js` reopens an inner page opened alone inside it.
+- External links are kept as they were and open in a new tab (`target="_blank" rel="noopener"`), because many hosts refuse to be framed. One dead link was repaired: `lcweb.loc.gov` -> `www.loc.gov`.
+- `mission.mid` (background music of `title.htm`) and `me.htm` music play through `scripts/midi-player.js`, a small Web Audio player (click to play, no dependency; chiptune-like, not General MIDI), since no browser plays `<embed>` MIDI any more.
+- `leo.mp3` (`assets/`) is a playable rendition of the RealAudio `leo.ra`, converted with ffmpeg and linked next to the original on `me.htm`.
+- `index_sheep.html` is linked from `modules.htm`; `404.html` is added.
+- The "If you don't like my english speaking" link on `me.htm` is kept.
+
 Not published: files no page links (five orphan RAR/ZIP archives, an Orange Juice site copy, party photos, a copy of the old home page, a pseudonym form page), the counters.
 
 ## Layout
@@ -37,6 +46,8 @@ Not published: files no page links (five orphan RAR/ZIP archives, an Orange Juic
 | `site.json` | The only site-specific settings: repository, storage zone, pull zone, hostname |
 | `infra/` | OpenTofu: storage zone, pull zone, hostname (state encrypted, committed) |
 | `infra/secrets.env` | Proton Pass **references** to the secrets (vault `OldSites`), no secret values |
+| `assets/` | Files added to the archive (`leo.mp3`) |
+| `scripts/midi-player.js`, `scripts/frame-restore.js` | Scripts copied into `site/` (MIDI player, frame restore) |
 | `scripts/deploy.py` | Sync `site/` to the storage zone, purge the CDN |
 | `scripts/smoke_test.py` | Check that the public site serves the files of `site/` |
 | `publish.sh`, `scripts/build.py` | Build and check `site/` from the raw store |
