@@ -11,7 +11,7 @@ Two raw folders are merged:
                    the page that main.htm always linked)
 
 Only what a page of the site reaches is published (crawl from index.html). Paths are lowercased,
-`me.shtm` becomes `me.htm`, links to dead third-party hosts become plain text, counters and the SSI
+`me.shtm` becomes `me.htm`, external links are kept as they were, counters and the SSI
 sponsor include are removed, e-mail addresses are masked as `local＠????` and the pages that show one
 (or a real name, or archives with personal data) end with the removal footer. Third-party files
 (zip, rar, exe, ra, mid, mp3) are copied byte-identical.
@@ -56,7 +56,7 @@ HOME_NOTE = (
     '<div id="archive-note" style="margin:24px auto 8px;padding:6px 8px 0;width:70%;'
     'border-top:1px solid #808080;text-align:center;font:11px/15px Verdana,Arial,Helvetica,sans-serif;'
     'color:#a0a0a0;background:transparent">Archive of Chandra\'s web site as it was in January 1997 (pages '
-    "updated 1997-01-29). Read-only: counters, e-mail links and links to other sites no longer work. Full "
+    "updated 1997-01-29). Read-only: counters and e-mail addresses no longer work, and links to other sites may be dead. Full "
     'list of the old sites: <a href="https://chanoj.github.io/" target="_top" style="color:#a0a0a0">'
     "chanoj.github.io</a>.</div>"
 )
@@ -133,12 +133,12 @@ class Site:
             return "drop", None
         if low.startswith("#"):
             return "keep", href
+        if re.match(r"(?i)^([a-z][a-z0-9+.-]*:|//)", href):
+            return "keep", href  # external links stay as they were, dead or not (user decision)
         frag = ""
         if "#" in href:
             href, _, frag = href.partition("#")
             frag = "#" + frag
-        if re.match(r"(?i)^([a-z][a-z0-9+.-]*:|//)", href):
-            return "drop", None  # dead third-party hosts: plain text
         path = unquote(href.split("?", 1)[0]).replace("\\", "/")
         if path == "":
             return "drop", None
