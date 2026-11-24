@@ -17,6 +17,7 @@ sponsor include are removed, e-mail addresses are masked as `local＠????` and t
 (zip, rar, exe, ra, mid, mp3) are copied byte-identical.
 """
 import argparse
+import hashlib
 import os
 import re
 import shutil
@@ -83,6 +84,8 @@ EMAIL = re.compile(r"(?i)\b([A-Za-z0-9._+-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+
 COUNTER_LINE = re.compile(r"(?is)(?:<strong>)?Number of visitors:\s*(?:<img\b[^>]*compteur\.gif[^>]*>)?")
 SSI = re.compile(r"(?is)<!--#exec[^>]*-->")
 HTML_EXT = (".htm", ".html")
+EMBED_MIDI = re.compile(r'(?is)<embed\b[^>]*src="([^"]+\.mid)"[^>]*>')
+MIDI_JS = REPO / "scripts" / "midi-player.js"
 
 
 def rd(p):
@@ -117,6 +120,7 @@ class Site:
                     self.src[dest] = p
                     self.origin[dest] = "chandra" if name == "chandra_rebuts" else "hotdir"
         self.unresolved = {}
+        self.midi_hash = hashlib.sha256(MIDI_JS.read_bytes()).hexdigest()[:10]
         self.reached = set()
 
     def resolve(self, page, href):
@@ -236,6 +240,9 @@ class Site:
             done.add(rel)
             if rel.endswith(HTML_EXT):
                 text = self.rewrite(rel, self.sanitize(rel, rd(self.src[rel])))
+                # the MIDI console no browser plays any more -> a play button (scripts/midi-player.js)
+                text = EMBED_MIDI.sub(lambda m: '<span class="midi-player" data-src="%s" data-loop="1"></span>'
+                                      '<script src="/midi-player.js?v=%s"></script>' % (m.group(1), self.midi_hash), text)
                 if FULLWIDTH_AT + "????" in text or rel in FOOTER_PAGES:
                     text = self._append(text, REMOVAL_NOTE)
                 if rel == "main.htm":
@@ -249,6 +256,7 @@ class Site:
             else:
                 d.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(self.src[rel], d)
+        shutil.copyfile(MIDI_JS, out / "midi-player.js")
         wr(out / "404.html", NOT_FOUND)
         self.skipped = sorted(set(self.src) - done)
         return len(done) + 1
