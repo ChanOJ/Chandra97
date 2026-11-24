@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD><script src="/frame-restore.js"></script><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>RAR Examples</TITLE>
+</HEAD>
+
+<BODY bgcolor=#C0C0C0>
+<CENTER>
+<H1>RAR Examples</H1>
+<br><pre>
+  ZIP File          Size        Time  |    RAR File         Size         Time
+--------------------------------------+--------------------------------------
+WAV     .ZIP    192,356 bytes   5"66  |  WAV     .RAR    131,238 bytes   4"55
+BMP     .ZIP    452,340 bytes  13"49  |  BMP     .RAR    444,166 bytes  16"95
+TXT     .ZIP     22,081 bytes   0"89  |  TXT     .RAR     13,820 bytes   1"24
+--------------------------------------+--------------------------------------
+                666,777 bytes  20"04  |                  589,224 bytes  22"74
+
+
+The difference between the two sizes represent 48 seconds of download with a good 14.400.
+
+The command line used for PKZIP was : PKZIP -ex
+The command line used for RAR was :   RAR a -s
+</pre>
+<TT>
+As you can see, PKZIP was used with its better compression method but RAR wasn't (method 3/5 is set as default).<br>
+<br>
+The -s switches used for RAR is named "Solid archiving". The principle is to use only one dictionnary for all the archive (it is very efficient with text but less with random datas).<br>
+<br>
+RAR can be used on the command line, but a text interface is also included. This interface can also read and extract (using the appropriate unarchiving program) PKZIP, ARJ and LHA archives.<br>
+<br>
+RAR also exists under OS/2, Win95, Win32S, Linux, UNIX and AMIGA systems (see the FTP site).<br>
+<br>
+</TT>
+<HR>
+Return to <A HREF="/software.htm">My prefered Softwares</a>
+</CENTER>
+</BODY>
+</HTML>
