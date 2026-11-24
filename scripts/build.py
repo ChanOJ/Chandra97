@@ -101,7 +101,7 @@ NOT_FOUND = """<HTML>
 TAG_A = re.compile(r"(?is)<a\b[^>]*>|</a\s*>")
 TAG_MEDIA = re.compile(r"(?is)<(?:img|frame|embed)\b[^>]*>")
 ATTR = lambda name: re.compile(r"""(?is)(\s%s\s*=\s*)(?:"([^"]*)"|'([^']*)'|([^\s>]+))""" % name)
-HREF, SRCATTR, BACKGROUND = ATTR("href"), ATTR("src"), ATTR("background")
+HREF, SRCATTR, BACKGROUND, TARGET = ATTR("href"), ATTR("src"), ATTR("background"), ATTR("target")
 MAILTO_A = re.compile(r"""(?is)<a\b[^>]*href\s*=\s*["']?mailto:([^"'>\s?]+)[^>]*>(.*?)</a\s*>""")
 EMAIL = re.compile(r"(?i)\b([A-Za-z0-9._+-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)")
 COUNTER_LINE = re.compile(r"(?is)(?:<strong>)?Number of visitors:\s*(?:<img\b[^>]*compteur\.gif[^>]*>)?")
@@ -194,7 +194,10 @@ class Site:
                 continue
             kind, val = self.resolve(rel, attr_value(h))
             if kind in ("url", "keep"):
-                out.append(HREF.sub(lambda mm: '%s"%s"' % (mm.group(1), val), tag, count=1))
+                tag = HREF.sub(lambda mm: '%s"%s"' % (mm.group(1), val), tag, count=1)
+                if re.match(r"(?i)^((https?|ftp):|//)", val):  # external: a new tab (many sites refuse frames)
+                    tag = TARGET.sub("", tag)[:-1] + ' target="_blank" rel="noopener">'
+                out.append(tag)
                 unwrap.append(False)
             else:
                 out.append("")
