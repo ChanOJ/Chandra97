@@ -60,6 +60,29 @@ HOME_NOTE = (
     'list of the old sites: <a href="https://chanoj.github.io/" target="_top" style="color:#a0a0a0">'
     "chanoj.github.io</a>.</div>"
 )
+# The frameset becomes two iframes in a column 800 px wide, centred: the widest screen of the time
+# (800x600), so the pages lay out as their author saw them. Frame names are kept (links use target="main").
+INDEX = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Chandra's Web Site</title>
+<style>
+html, body { height: 100%; margin: 0; background: #000; }
+#page { width: 800px; max-width: 100%; height: 100%; margin: 0 auto; display: flex; flex-direction: column; }
+iframe { border: 0; width: 100%; display: block; }
+#title { height: 90px; flex: none; }
+#main { flex: 1 1 auto; }
+</style>
+</head>
+<body>
+<div id="page">
+<iframe id="title" name="title" src="title.htm" scrolling="no" title="Chandra's Web Site"></iframe>
+<iframe id="main" name="main" src="main.htm" title="Chandra's Web Site"></iframe>
+</div>
+</body>
+</html>
+"""
 NOT_FOUND = """<HTML>
 <HEAD>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
@@ -250,6 +273,7 @@ class Site:
                     text = self._append(text, HOME_NOTE)
                 pages[rel] = text
             queue.extend(sorted(self.reached - done))
+        pages["index.html"] = INDEX
         for rel in sorted(done):
             d = out / rel
             if rel in pages:
