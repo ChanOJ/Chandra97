@@ -35,7 +35,14 @@ NICK = "chandra"  # addresses with this local part (the author's nick, defunct) 
 HOTDIR_SKIP = {"copy of index.html", "robots.txt", "sitemap.xml", "wired98/newsf.htm"}
 RENAME = {"me.shtm": "me.htm"}                     # Chandra: SSI page, its own links already say me.htm
 HOTDIR_RENAME = {"index.html": "hdir.htm"}         # HotDIR: home page -> the page main.htm links
+# Added files (not in the original): leo.mp3 = leo.ra decoded by ffmpeg (RealAudio plays nowhere any more)
+ADDED = {"leo.mp3": REPO / "assets" / "leo.mp3"}
 EXTRA_LINKS = {                                    # one link added: the optimised module page of HotDIR
+    "me.htm": (
+        'width="183" height="480"></a></p>',
+        'width="183" height="480"></a></p>\n\n<p align="center"><audio controls preload="none" src="leo.mp3"></audio><br>'
+        '<tt>Leo (the original RealAudio file: <a href="leo.ra">leo.ra</a>)</tt></p>',
+    ),
     "modules.htm": (
         "(S3M, 2149 ko)</h3>",
         '(S3M, 2149 ko)</h3>\n\n<p align="center"><a href="index_sheep.html">Same module, optimised by '
@@ -99,7 +106,7 @@ NOT_FOUND = """<HTML>
 """
 
 TAG_A = re.compile(r"(?is)<a\b[^>]*>|</a\s*>")
-TAG_MEDIA = re.compile(r"(?is)<(?:img|frame|embed)\b[^>]*>")
+TAG_MEDIA = re.compile(r"(?is)<(?:img|frame|embed|audio)\b[^>]*>")
 ATTR = lambda name: re.compile(r"""(?is)(\s%s\s*=\s*)(?:"([^"]*)"|'([^']*)'|([^\s>]+))""" % name)
 HREF, SRCATTR, BACKGROUND, TARGET = ATTR("href"), ATTR("src"), ATTR("background"), ATTR("target")
 MAILTO_A = re.compile(r"""(?is)<a\b[^>]*href\s*=\s*["']?mailto:([^"'>\s?]+)[^>]*>(.*?)</a\s*>""")
@@ -143,6 +150,8 @@ class Site:
                     assert dest not in self.src, dest  # no overlap once HotDIR's index.html is renamed
                     self.src[dest] = p
                     self.origin[dest] = "chandra" if name == "chandra_rebuts" else "hotdir"
+        for name, path in ADDED.items():
+            self.src[name], self.origin[name] = path, "chandra"
         self.unresolved = {}
         self.midi_hash = hashlib.sha256(MIDI_JS.read_bytes()).hexdigest()[:10]
         self.reached = set()
