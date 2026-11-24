@@ -11,12 +11,13 @@ Two raw folders are merged:
                    the page that main.htm always linked)
 
 Only what a page of the site reaches is published (crawl from index.html). Paths are lowercased,
-`me.shtm` becomes `me.htm`, links to dead third-party hosts become plain text, counters and the SSI
+`me.shtm` becomes `me.htm`, external links are kept as they were, counters and the SSI
 sponsor include are removed, e-mail addresses are masked as `local＠????` and the pages that show one
 (or a real name, or archives with personal data) end with the removal footer. Third-party files
 (zip, rar, exe, ra, mid, mp3) are copied byte-identical.
 """
 import argparse
+import hashlib
 import os
 import re
 import shutil
@@ -28,12 +29,20 @@ from urllib.parse import unquote
 REPO = Path(__file__).resolve().parent.parent
 ENC = "iso-8859-1"
 FULLWIDTH_AT = "&#65312;"
+NICK = "chandra"  # addresses with this local part (the author's nick, defunct) are left complete
 
 # HotDIR files that are not published, by reason (everything else is reached by the crawl).
 HOTDIR_SKIP = {"copy of index.html", "robots.txt", "sitemap.xml", "wired98/newsf.htm"}
 RENAME = {"me.shtm": "me.htm"}                     # Chandra: SSI page, its own links already say me.htm
 HOTDIR_RENAME = {"index.html": "hdir.htm"}         # HotDIR: home page -> the page main.htm links
+# Added files (not in the original): leo.mp3 = leo.ra decoded by ffmpeg (RealAudio plays nowhere any more)
+ADDED = {"leo.mp3": REPO / "assets" / "leo.mp3"}
 EXTRA_LINKS = {                                    # one link added: the optimised module page of HotDIR
+    "me.htm": (
+        'width="183" height="480"></a></p>',
+        'width="183" height="480"></a></p>\n\n<p align="center"><audio controls preload="none" src="leo.mp3"></audio><br>'
+        '<tt>Leo (the original RealAudio file: <a href="leo.ra">leo.ra</a>)</tt></p>',
+    ),
     "modules.htm": (
         "(S3M, 2149 ko)</h3>",
         '(S3M, 2149 ko)</h3>\n\n<p align="center"><a href="index_sheep.html">Same module, optimised by '
@@ -54,10 +63,33 @@ HOME_NOTE = (
     '<div id="archive-note" style="margin:24px auto 8px;padding:6px 8px 0;width:70%;'
     'border-top:1px solid #808080;text-align:center;font:11px/15px Verdana,Arial,Helvetica,sans-serif;'
     'color:#a0a0a0;background:transparent">Archive of Chandra\'s web site as it was in January 1997 (pages '
-    "updated 1997-01-29). Read-only: counters, e-mail links and links to other sites no longer work. Full "
+    "updated 1997-01-29). Read-only: counters and e-mail addresses no longer work, and links to other sites may be dead. Full "
     'list of the old sites: <a href="https://chanoj.github.io/" target="_top" style="color:#a0a0a0">'
     "chanoj.github.io</a>.</div>"
 )
+# The frameset becomes two iframes in a column 800 px wide, centred: the widest screen of the time
+# (800x600), so the pages lay out as their author saw them. Frame names are kept (links use target="main").
+INDEX = """<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Chandra's Web Site</title>
+<style>
+html, body { height: 100%; margin: 0; background: #000; }
+#page { width: 800px; max-width: 100%; height: 100%; margin: 0 auto; display: flex; flex-direction: column; }
+iframe { border: 0; width: 100%; display: block; }
+#title { height: 90px; flex: none; }
+#main { flex: 1 1 auto; }
+</style>
+</head>
+<body>
+<div id="page">
+<iframe id="title" name="title" src="title.htm" scrolling="no" title="Chandra's Web Site"></iframe>
+<iframe id="main" name="main" src="main.htm" title="Chandra's Web Site"></iframe>
+</div>
+</body>
+</html>
+"""
 NOT_FOUND = """<HTML>
 <HEAD>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
@@ -74,14 +106,17 @@ NOT_FOUND = """<HTML>
 """
 
 TAG_A = re.compile(r"(?is)<a\b[^>]*>|</a\s*>")
-TAG_MEDIA = re.compile(r"(?is)<(?:img|frame|embed)\b[^>]*>")
+TAG_MEDIA = re.compile(r"(?is)<(?:img|frame|embed|audio)\b[^>]*>")
 ATTR = lambda name: re.compile(r"""(?is)(\s%s\s*=\s*)(?:"([^"]*)"|'([^']*)'|([^\s>]+))""" % name)
-HREF, SRCATTR, BACKGROUND = ATTR("href"), ATTR("src"), ATTR("background")
+HREF, SRCATTR, BACKGROUND, TARGET = ATTR("href"), ATTR("src"), ATTR("background"), ATTR("target")
 MAILTO_A = re.compile(r"""(?is)<a\b[^>]*href\s*=\s*["']?mailto:([^"'>\s?]+)[^>]*>(.*?)</a\s*>""")
 EMAIL = re.compile(r"(?i)\b([A-Za-z0-9._+-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)")
 COUNTER_LINE = re.compile(r"(?is)(?:<strong>)?Number of visitors:\s*(?:<img\b[^>]*compteur\.gif[^>]*>)?")
 SSI = re.compile(r"(?is)<!--#exec[^>]*-->")
 HTML_EXT = (".htm", ".html")
+URL_FIXES = {"http://lcweb.loc.gov/": "https://www.loc.gov/"}  # dead host, certain new address (user OK)
+EMBED_MIDI = re.compile(r'(?is)<embed\b[^>]*src="([^"]+\.mid)"[^>]*>')
+MIDI_JS = REPO / "scripts" / "midi-player.js"
 
 
 def rd(p):
@@ -115,23 +150,28 @@ class Site:
                     assert dest not in self.src, dest  # no overlap once HotDIR's index.html is renamed
                     self.src[dest] = p
                     self.origin[dest] = "chandra" if name == "chandra_rebuts" else "hotdir"
+        for name, path in ADDED.items():
+            self.src[name], self.origin[name] = path, "chandra"
         self.unresolved = {}
+        self.midi_hash = hashlib.sha256(MIDI_JS.read_bytes()).hexdigest()[:10]
         self.reached = set()
 
     def resolve(self, page, href):
         """('url', published URL) | ('keep', href) | ('drop', None)."""
         href = href.strip()
         low = href.lower()
+        if low.startswith("mailto:" + NICK + "@"):
+            return "keep", href
         if low.startswith(("javascript:", "data:", "mailto:")):
             return "drop", None
         if low.startswith("#"):
             return "keep", href
+        if re.match(r"(?i)^([a-z][a-z0-9+.-]*:|//)", href):
+            return "keep", URL_FIXES.get(href, href)  # external links stay as they were, dead or not (user decision)
         frag = ""
         if "#" in href:
             href, _, frag = href.partition("#")
             frag = "#" + frag
-        if re.match(r"(?i)^([a-z][a-z0-9+.-]*:|//)", href):
-            return "drop", None  # dead third-party hosts: plain text
         path = unquote(href.split("?", 1)[0]).replace("\\", "/")
         if path == "":
             return "drop", None
@@ -163,7 +203,10 @@ class Site:
                 continue
             kind, val = self.resolve(rel, attr_value(h))
             if kind in ("url", "keep"):
-                out.append(HREF.sub(lambda mm: '%s"%s"' % (mm.group(1), val), tag, count=1))
+                tag = HREF.sub(lambda mm: '%s"%s"' % (mm.group(1), val), tag, count=1)
+                if re.match(r"(?i)^((https?|ftp):|//)", val):  # external: a new tab (many sites refuse frames)
+                    tag = TARGET.sub("", tag)[:-1] + ' target="_blank" rel="noopener">'
+                out.append(tag)
                 unwrap.append(False)
             else:
                 out.append("")
@@ -202,12 +245,14 @@ class Site:
             text = text.replace(old, new, 1)
 
         def mail(m):
+            if m.group(1).split("@")[0].lower() == NICK:
+                return m.group(0)  # the nick's own (defunct) address stays as it was
             local = m.group(1).split("@")[0]
             label = re.sub(r"(?:&nbsp;|\s)+$", "", m.group(2))
             return "%s (%s%s????)" % (label, local, FULLWIDTH_AT)
 
         text = MAILTO_A.sub(mail, text)
-        text = EMAIL.sub(lambda m: m.group(1) + FULLWIDTH_AT + "????", text)
+        text = EMAIL.sub(lambda m: m.group(0) if m.group(1).lower() == NICK else m.group(1) + FULLWIDTH_AT + "????", text)
         if not re.search(r"(?i)charset\s*=", text):
             text = re.sub(r"(?i)(<head[^>]*>)", r'\1<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">', text, count=1)
         return text
@@ -231,12 +276,16 @@ class Site:
             done.add(rel)
             if rel.endswith(HTML_EXT):
                 text = self.rewrite(rel, self.sanitize(rel, rd(self.src[rel])))
+                # the MIDI console no browser plays any more -> a play button (scripts/midi-player.js)
+                text = EMBED_MIDI.sub(lambda m: '<span class="midi-player" data-src="%s" data-loop="1"></span>'
+                                      '<script src="/midi-player.js?v=%s"></script>' % (m.group(1), self.midi_hash), text)
                 if FULLWIDTH_AT + "????" in text or rel in FOOTER_PAGES:
                     text = self._append(text, REMOVAL_NOTE)
                 if rel == "main.htm":
                     text = self._append(text, HOME_NOTE)
                 pages[rel] = text
             queue.extend(sorted(self.reached - done))
+        pages["index.html"] = INDEX
         for rel in sorted(done):
             d = out / rel
             if rel in pages:
@@ -244,6 +293,7 @@ class Site:
             else:
                 d.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(self.src[rel], d)
+        shutil.copyfile(MIDI_JS, out / "midi-player.js")
         wr(out / "404.html", NOT_FOUND)
         self.skipped = sorted(set(self.src) - done)
         return len(done) + 1
