@@ -28,8 +28,8 @@ LEFTOVERS = [
     ("form tag", re.compile(r"(?i)<form\b")),
     ("password input", re.compile(r"(?i)<input[^>]*type\s*=\s*\"?password[^>]*value")),
     ("asp tag", re.compile(r"<%")),
-    ("mailto", re.compile(r"(?i)(?<![a-z])mailto:(?!chandra@)")),
-    ("e-mail address", re.compile(r"(?i)\b(?!chandra@)" + EMAIL.pattern)),
+    ("mailto", re.compile(r"(?i)(?<![a-z])mailto:(?!(?:chandra|ccbw|ralphg)@)")),
+    ("e-mail address", re.compile(r"(?i)\b(?!(?:chandra|ccbw|ralphg)@)" + EMAIL.pattern)),
     ("phone number", PHONE),
     ("age + postcode", AGE),
 ]

@@ -29,7 +29,7 @@ from urllib.parse import unquote
 REPO = Path(__file__).resolve().parent.parent
 ENC = "iso-8859-1"
 FULLWIDTH_AT = "&#65312;"
-NICK = "chandra"  # addresses with this local part (the author's nick, defunct) are left complete
+NICKS = {"chandra", "ccbw", "ralphg"}  # local parts that are nicks (the author's, defunct; two SEA authors'): left complete
 
 # HotDIR files that are not published, by reason (everything else is reached by the crawl).
 HOTDIR_SKIP = {"copy of index.html", "robots.txt", "sitemap.xml", "wired98/newsf.htm"}
@@ -160,7 +160,7 @@ class Site:
         """('url', published URL) | ('keep', href) | ('drop', None)."""
         href = href.strip()
         low = href.lower()
-        if low.startswith("mailto:" + NICK + "@"):
+        if low[7:].split("@")[0] in NICKS and low.startswith("mailto:") and "@" in low:
             return "keep", href
         if low.startswith(("javascript:", "data:", "mailto:")):
             return "drop", None
@@ -245,14 +245,14 @@ class Site:
             text = text.replace(old, new, 1)
 
         def mail(m):
-            if m.group(1).split("@")[0].lower() == NICK:
+            if m.group(1).split("@")[0].lower() in NICKS:
                 return m.group(0)  # the nick's own (defunct) address stays as it was
             local = m.group(1).split("@")[0]
             label = re.sub(r"(?:&nbsp;|\s)+$", "", m.group(2))
             return "%s (%s%s????)" % (label, local, FULLWIDTH_AT)
 
         text = MAILTO_A.sub(mail, text)
-        text = EMAIL.sub(lambda m: m.group(0) if m.group(1).lower() == NICK else m.group(1) + FULLWIDTH_AT + "????", text)
+        text = EMAIL.sub(lambda m: m.group(0) if m.group(1).lower() in NICKS else m.group(1) + FULLWIDTH_AT + "????", text)
         if not re.search(r"(?i)charset\s*=", text):
             text = re.sub(r"(?i)(<head[^>]*>)", r'\1<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">', text, count=1)
         return text
