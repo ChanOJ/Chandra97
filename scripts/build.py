@@ -84,6 +84,7 @@ EMAIL = re.compile(r"(?i)\b([A-Za-z0-9._+-]+)@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+
 COUNTER_LINE = re.compile(r"(?is)(?:<strong>)?Number of visitors:\s*(?:<img\b[^>]*compteur\.gif[^>]*>)?")
 SSI = re.compile(r"(?is)<!--#exec[^>]*-->")
 HTML_EXT = (".htm", ".html")
+URL_FIXES = {"http://lcweb.loc.gov/": "https://www.loc.gov/"}  # dead host, certain new address (user OK)
 EMBED_MIDI = re.compile(r'(?is)<embed\b[^>]*src="([^"]+\.mid)"[^>]*>')
 MIDI_JS = REPO / "scripts" / "midi-player.js"
 
@@ -134,7 +135,7 @@ class Site:
         if low.startswith("#"):
             return "keep", href
         if re.match(r"(?i)^([a-z][a-z0-9+.-]*:|//)", href):
-            return "keep", href  # external links stay as they were, dead or not (user decision)
+            return "keep", URL_FIXES.get(href, href)  # external links stay as they were, dead or not (user decision)
         frag = ""
         if "#" in href:
             href, _, frag = href.partition("#")
