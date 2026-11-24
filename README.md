@@ -23,7 +23,7 @@ The HotDIR home page was first published alone as `HotDIR97`; it is the page `hd
 ./publish.sh
 ```
 
-It runs `scripts/build.py` (crawl from `index.html`: only what a page reaches is published; lowercase names, `me.shtm` -> `me.htm`, links to dead third-party hosts turned into plain text, counters and the SSI include removed, e-mail addresses masked as `local＠????`), `scripts/seo.py` (`robots.txt`, `sitemap.xml`, `frame-restore.js`: an inner page opened alone reopens inside the frameset), `scripts/verify_build.py` and `scripts/check_excludes.py`. It never deploys: merging to `main` does, through GitHub Actions.
+It runs `scripts/build.py` (crawl from `index.html`: only what a page reaches is published; lowercase names, `me.shtm` -> `me.htm`, links to dead third-party hosts turned into plain text, counters and the SSI include removed, e-mail addresses masked as `local＠????` (except the nick's own defunct `chandra@` ones)), `scripts/seo.py` (`robots.txt`, `sitemap.xml`, `frame-restore.js`: an inner page opened alone reopens inside the frameset), `scripts/verify_build.py` and `scripts/check_excludes.py`. It never deploys: merging to `main` does, through GitHub Actions.
 
 Third-party downloads (zip, rar, the two RAR installers, the module and MIDI files) are copied untouched; the pages that link them, or that show an e-mail local part or a family name, end with "To be removed from this page, contact me."
 
