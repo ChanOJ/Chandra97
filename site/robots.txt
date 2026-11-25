@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://chandra97.sauthier.family/sitemap.xml
+Sitemap: https://chandra97.sauthier.family/sitemap-all.xml

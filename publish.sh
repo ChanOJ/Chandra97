@@ -5,5 +5,6 @@ set -euo pipefail
 cd "$(dirname "$0")"
 python3 -I scripts/build.py "$@"
 python3 -I scripts/seo.py
+python3 -I scripts/sitemap_all.py
 python3 -I scripts/verify_build.py
 python3 -I scripts/check_excludes.py

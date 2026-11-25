@@ -29,7 +29,7 @@ The HotDIR home page was first published alone as `HotDIR97`; it is the page `hd
 ./publish.sh
 ```
 
-It runs `scripts/build.py` (crawl from `index.html`: only what a page reaches is published; lowercase names, `me.shtm` -> `me.htm`, counters and the SSI include removed, e-mail addresses masked as `local＠????` (except nicks: the author's defunct `chandra@` and the two SEA authors' `ccbw@` and `ralphg@`, kept complete)), `scripts/seo.py` (`robots.txt`, `sitemap.xml`, `frame-restore.js`: an inner page opened alone reopens inside the frameset), `scripts/verify_build.py` and `scripts/check_excludes.py`. It never deploys: merging to `main` does, through GitHub Actions.
+It runs `scripts/build.py` (crawl from `index.html`: only what a page reaches is published; lowercase names, `me.shtm` -> `me.htm`, counters and the SSI include removed, e-mail addresses masked as `local＠????` (except nicks: the author's defunct `chandra@` and the two SEA authors' `ccbw@` and `ralphg@`, kept complete)), `scripts/seo.py` (`robots.txt`, `sitemap.xml`, `frame-restore.js`: an inner page opened alone reopens inside the frameset), `scripts/sitemap_all.py` (`sitemap-all.xml`: one sitemap index listing the sitemaps of all 18 archives, to submit once in Search Console; `--check` verifies them live, and the list is static: update it when a site is added or its sitemap becomes an index), `scripts/verify_build.py` and `scripts/check_excludes.py`. It never deploys: merging to `main` does, through GitHub Actions.
 
 Third-party downloads (zip, rar, the two RAR installers, the module and MIDI files) are copied untouched; the pages that link them, or that show an e-mail local part or a family name, end with "To be removed from this page, contact me."
 
