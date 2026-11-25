@@ -59,6 +59,15 @@ REMOVAL_NOTE = (
     'color:#808080;background:transparent">To be removed from this page, '
     '<a href="mailto:chandra_oj@pm.me" style="color:#808080;text-decoration:underline">contact me</a>.</div>'
 )
+# Pages that link downloadable executables or archives: a short warning above the removal footer.
+DOWNLOAD_PAGES = {"hdir.htm", "modules.htm", "software.htm"}
+DOWNLOAD_NOTE = (
+    '<div id="download-note" style="clear:both;margin:28px auto 0;padding:6px 8px 0;width:60%;'
+    'text-align:center;font:11px/15px Verdana,Arial,Helvetica,sans-serif;color:#a0a0a0;background:transparent">'
+    "Warning: the files offered for download here (installers, programs, archives) are old files from 1996-1997, "
+    "provided as-is and never scanned by the site owner. Only open them in a virtual machine or an emulator "
+    "such as DOSBox.</div>"
+)
 HOME_NOTE = (
     '<div id="archive-note" style="margin:24px auto 8px;padding:6px 8px 0;width:70%;'
     'border-top:1px solid #808080;text-align:center;font:11px/15px Verdana,Arial,Helvetica,sans-serif;'
@@ -279,6 +288,8 @@ class Site:
                 # the MIDI console no browser plays any more -> a play button (scripts/midi-player.js)
                 text = EMBED_MIDI.sub(lambda m: '<span class="midi-player" data-src="%s" data-loop="1"></span>'
                                       '<script src="/midi-player.js?v=%s"></script>' % (m.group(1), self.midi_hash), text)
+                if rel in DOWNLOAD_PAGES:
+                    text = self._append(text, DOWNLOAD_NOTE)
                 if FULLWIDTH_AT + "????" in text or rel in FOOTER_PAGES:
                     text = self._append(text, REMOVAL_NOTE)
                 if rel == "main.htm":
